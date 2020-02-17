@@ -1,0 +1,773 @@
+package glservice
+
+import (
+	"context"
+	"database/sql"
+
+	"github.com/gaterace/dml-go/pkg/dml"
+	"github.com/google/uuid"
+
+	_ "github.com/go-sql-driver/mysql"
+
+	pb "github.com/gaterace/mledger/pkg/mserviceledger"
+)
+
+// create general ledger transaction type
+func (s *glService) CreateTransactionType(ctx context.Context, req *pb.CreateTransactionTypeRequest) (*pb.CreateTransactionTypeResponse, error) {
+	s.logger.Printf("CreateTransactionType called, id: %d\n", req.GetTransactionTypeId())
+	resp := &pb.CreateTransactionTypeResponse{}
+
+	sqlstring := `INSERT INTO tb_GLTransactionType (inbMserviceId, intTransactionTypeId, dtmCreated, dtmModified, 
+		dtmDeleted, bitIsDeleted, intVersion, chvTransactionType) 
+		VALUES (?, ?, NOW(), NOW(), NOW(), 0, 1, ?)`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetMserviceId(), req.GetTransactionTypeId(), req.GetTransactionType())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// update general ledger transaction type
+func (s *glService) UpdateTransactionType(ctx context.Context, req *pb.UpdateTransactionTypeRequest) (*pb.UpdateTransactionTypeResponse, error) {
+	s.logger.Printf("UpdateTransactionType called, id: %d\n", req.GetTransactionTypeId())
+	resp := &pb.UpdateTransactionTypeResponse{}
+
+	sqlstring := `UPDATE tb_GLTransactionType SET dtmModified = NOW(), intVersion = ?, chvTransactionType = ?
+	WHERE inbMserviceId = ? AND intTransactionTypeId = ? AND intVersion = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetVersion()+1, req.GetTransactionType(), req.GetMserviceId(), req.GetTransactionTypeId(), req.GetVersion())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = req.GetVersion() + 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// delete general ledger transaction type
+func (s *glService) DeleteTransactionType(ctx context.Context, req *pb.DeleteTransactionTypeRequest) (*pb.DeleteTransactionTypeResponse, error) {
+	s.logger.Printf("DeleteTransactionType called, id: %d\n", req.GetTransactionTypeId())
+	resp := &pb.DeleteTransactionTypeResponse{}
+
+	sqlstring := `UPDATE tb_GLTransactionType SET dtmDeleted = NOW(), intVersion = ?, bitIsDeleted = 1
+	WHERE inbMserviceId = ? AND intTransactionTypeId = ? AND intVersion = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetVersion()+1, req.GetMserviceId(), req.GetTransactionTypeId(), req.GetVersion())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = req.GetVersion() + 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// get general ledger transaction type by id
+func (s *glService) GetTransactionTypeById(ctx context.Context, req *pb.GetTransactionTypeByIdRequest) (*pb.GetTransactionTypeByIdResponse, error) {
+	s.logger.Printf("GetTransactionTypeById called, id: %d\n", req.GetTransactionTypeId())
+	resp := &pb.GetTransactionTypeByIdResponse{}
+
+	sqlstring := `SELECT inbMserviceId, intTransactionTypeId, dtmCreated, dtmModified, intVersion, chvTransactionType
+	FROM tb_GLTransactionType WHERE inbMserviceId = ? AND intTransactionTypeId = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	var created string
+	var modified string
+	var tranType pb.GLTransactionType
+
+	err = stmt.QueryRow(req.GetMserviceId(), req.GetTransactionTypeId()).Scan(&tranType.MserviceId, &tranType.TransactionTypeId, &created, &modified, &tranType.Version, &tranType.TransactionType)
+
+	if err == nil {
+		tranType.Created = dml.DateTimeFromString(created)
+		tranType.Modified = dml.DateTimeFromString(modified)
+		resp.GlTransactionType = &tranType
+	} else if err == sql.ErrNoRows {
+		resp.ErrorCode = 404
+		resp.ErrorMessage = "not found"
+
+	} else {
+		s.logger.Printf("queryRow failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = err.Error()
+
+	}
+
+	return resp, nil
+}
+
+// get general ledger transaction types by mservice
+func (s *glService) GetTransactionTypesByMservice(ctx context.Context, req *pb.GetTransactionTypesByMserviceRequest) (*pb.GetTransactionTypesByMserviceResponse, error) {
+	s.logger.Printf("GetTransactionTypesByMservice called, mservice: %d\n", req.GetMserviceId())
+	resp := &pb.GetTransactionTypesByMserviceResponse{}
+
+	sqlstring := `SELECT inbMserviceId, intTransactionTypeId, dtmCreated, dtmModified, intVersion, chvTransactionType
+	FROM tb_GLTransactionType WHERE inbMserviceId = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(req.GetMserviceId())
+	if err != nil {
+		s.logger.Printf("query failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = err.Error()
+		return resp, nil
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var created string
+		var modified string
+		var tranType pb.GLTransactionType
+		err := rows.Scan(&tranType.MserviceId, &tranType.TransactionTypeId, &created, &modified, &tranType.Version, &tranType.TransactionType)
+		if err != nil {
+			s.logger.Printf("query rows scan  failed: %v\n", err)
+			resp.ErrorCode = 500
+			resp.ErrorMessage = err.Error()
+			return resp, nil
+		}
+
+		tranType.Created = dml.DateTimeFromString(created)
+		tranType.Modified = dml.DateTimeFromString(modified)
+
+		resp.GlTransactionTypes = append(resp.GlTransactionTypes, &tranType)
+	}
+
+	return resp, nil
+}
+
+// create general ledger party
+func (s *glService) CreateParty(ctx context.Context, req *pb.CreatePartyRequest) (*pb.CreatePartyResponse, error) {
+	s.logger.Printf("CreateParty called, id: %d\n", req.GetPartyId())
+	resp := &pb.CreatePartyResponse{}
+
+	sqlstring := `INSERT INTO tb_GLParty (inbMserviceId, inbPartyId, dtmCreated, dtmModified, dtmDeleted, bitIsDeleted, intVersion, 
+		chvPartyName) VALUES(?, ?, NOW(), NOW(), NOW(), 0, 1, ?)`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetMserviceId(), req.GetPartyId(), req.GetPartyName())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// update general ledger party
+func (s *glService) UpdateParty(ctx context.Context, req *pb.UpdatePartyRequest) (*pb.UpdatePartyResponse, error) {
+	s.logger.Printf("UpdateParty called, id: %d\n", req.GetPartyId())
+	resp := &pb.UpdatePartyResponse{}
+
+	sqlstring := `UPDATE tb_GLParty SET dtmModified = NOW(), intVersion = ?, chvPartyName = ? WHERE 
+	inbMserviceId = ? AND inbPartyId = ? AND intVersion = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetVersion()+1, req.GetPartyName(), req.GetMserviceId(), req.GetPartyId(), req.GetVersion())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = req.GetVersion() + 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// delete general ledger party
+func (s *glService) DeleteParty(ctx context.Context, req *pb.DeletePartyRequest) (*pb.DeletePartyResponse, error) {
+	s.logger.Printf("DeleteParty called, id: %d\n", req.GetPartyId())
+	resp := &pb.DeletePartyResponse{}
+
+	sqlstring := `UPDATE tb_GLParty SET dtmDeleted = NOW(), intVersion = ?, bitIsDeleted = 1 WHERE 
+	inbMserviceId = ? AND inbPartyId = ? AND intVersion = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetVersion()+1, req.GetMserviceId(), req.GetPartyId(), req.GetVersion())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = req.GetVersion() + 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// get general ledger party by id
+func (s *glService) GetPartyById(ctx context.Context, req *pb.GetPartyByIdRequest) (*pb.GetPartyByIdResponse, error) {
+	s.logger.Printf("GetPartyById called, id: %d\n", req.GetPartyId())
+	resp := &pb.GetPartyByIdResponse{}
+
+	sqlstring := `SELECT inbMserviceId, inbPartyId, dtmCreated, dtmModified, intVersion, chvPartyName
+	FROM  tb_GLParty WHERE inbMserviceId = ? AND inbPartyId = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	var created string
+	var modified string
+	var party pb.GLParty
+
+	err = stmt.QueryRow(req.GetMserviceId(), req.GetPartyId()).Scan(&party.MserviceId, &party.PartyId, &created, &modified,
+		&party.Version, &party.PartyName)
+
+	if err == nil {
+		party.Created = dml.DateTimeFromString(created)
+		party.Modified = dml.DateTimeFromString(modified)
+		resp.GlParty = &party
+	} else if err == sql.ErrNoRows {
+		resp.ErrorCode = 404
+		resp.ErrorMessage = "not found"
+
+	} else {
+		s.logger.Printf("queryRow failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = err.Error()
+
+	}
+
+	return resp, nil
+}
+
+// get general ledger parties by mservice
+func (s *glService) GetPartiesByMservice(ctx context.Context, req *pb.GetPartiesByMserviceRequest) (*pb.GetPartiesByMserviceResponse, error) {
+	s.logger.Printf("GetPartiesByMservice called, mservice: %d\n", req.GetMserviceId())
+	resp := &pb.GetPartiesByMserviceResponse{}
+
+	sqlstring := `SELECT inbMserviceId, inbPartyId, dtmCreated, dtmModified, intVersion, chvPartyName
+	FROM  tb_GLParty WHERE inbMserviceId = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(req.GetMserviceId())
+	if err != nil {
+		s.logger.Printf("query failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = err.Error()
+		return resp, nil
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var created string
+		var modified string
+		var party pb.GLParty
+
+		err := rows.Scan(&party.MserviceId, &party.PartyId, &created, &modified, &party.Version, &party.PartyName)
+
+		if err != nil {
+			s.logger.Printf("query rows scan  failed: %v\n", err)
+			resp.ErrorCode = 500
+			resp.ErrorMessage = err.Error()
+			return resp, nil
+		}
+
+		party.Created = dml.DateTimeFromString(created)
+		party.Modified = dml.DateTimeFromString(modified)
+		resp.GlParties = append(resp.GlParties, &party)
+	}
+
+	return resp, nil
+}
+
+// create general ledger account
+func (s *glService) CreateAccount(ctx context.Context, req *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error) {
+	s.logger.Printf("CreateAccount called, name: %s\n", req.GetAccountName())
+	resp := &pb.CreateAccountResponse{}
+
+	sqlstring := `INSERT INTO tb_GLAccount (uidGlAccountId, dtmCreated, dtmModified, dtmDeleted, bitIsDeleted, intVersion, 
+		inbMserviceId, uidOrganizationId, chvAccountName, chvAccountDescription, intAccountTypeId) 
+		VALUES (?, NOW(), NOW(), NOW(), 0, 1, ?, ?, ?, ?, ?)`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	nid := uuid.New()
+	glId := dml.ConvertUuid(nid)
+
+	guid := req.GetOrganizationId()
+
+	res, err := stmt.Exec(glId.Guid, req.GetMserviceId(), guid.Guid, req.GetAccountName(), req.GetAccountDescription(), req.GetAccountTypeId())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = 1
+			resp.GlAccountId = glId
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// update general ledger account
+func (s *glService) UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequest) (*pb.UpdateAccountResponse, error) {
+	s.logger.Printf("UpdateAccount called, name: %s\n", req.GetAccountName())
+	resp := &pb.UpdateAccountResponse{}
+
+	sqlstring := `UPDATE tb_GLAccount SET dtmModified = NOW(), intVersion = ?, chvAccountName = ?, chvAccountDescription = ?, 
+	intAccountTypeId = ? WHERE inbMserviceId = ? AND uidGlAccountId = ? AND intVersion = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetVersion()+1, req.GetAccountName(), req.GetAccountDescription(), req.GetAccountTypeId(),
+		req.GetMserviceId(), req.GetGlAccountId().Guid, req.GetVersion())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = req.GetVersion() + 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// delete general ledger account
+func (s *glService) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequest) (*pb.DeleteAccountResponse, error) {
+	s.logger.Printf("DeleteAccount called, guid: %v\n", req.GetGlAccountId())
+	resp := &pb.DeleteAccountResponse{}
+
+	sqlstring := `UPDATE tb_GLAccount SET dtmDeleted = NOW(), bitIsDeleted = 1, intVersion = ? 
+	WHERE inbMserviceId = ? AND uidGlAccountId = ? AND intVersion = ? AND bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	res, err := stmt.Exec(req.GetVersion()+1, req.GetMserviceId(), req.GetGlAccountId().Guid, req.GetVersion())
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			resp.Version = req.GetVersion() + 1
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// get general ledger account by id
+func (s *glService) GetAccountById(ctx context.Context, req *pb.GetAccountByIdRequest) (*pb.GetAccountByIdResponse, error) {
+	s.logger.Printf("GetAccountById called, guid: %v\n", req.GetGlAccountId())
+	resp := &pb.GetAccountByIdResponse{}
+
+	sqlstring := `SELECT a.uidGlAccountId, a.dtmCreated, a.dtmModified, a.intVersion, 
+	a.inbMserviceId, a.uidOrganizationId, a.chvAccountName, a.chvAccountDescription, a.intAccountTypeId,
+	o.chvOrganizationName, t.chvAccountType
+	FROM tb_GLAccount AS a
+	JOIN tb_GLOrganization AS o
+	ON a.uidOrganizationId = o.uidOrganizationId
+	JOIN tb_GLAccountType AS t
+    ON a.inbMserviceId = t.inbMserviceId AND a.intAccountTypeId = t.intAccountTypeId
+	WHERE a.inbMserviceId = ? AND a.uidGlAccountId = ? AND a.bitIsDeleted = 0 AND o.bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	var acctGid []byte
+	var orgGid []byte
+	var created string
+	var modified string
+	var acct pb.GLAccount
+
+	err = stmt.QueryRow(req.GetMserviceId(), req.GlAccountId.Guid).Scan(&acctGid, &created, &modified, &acct.Version,
+		&acct.MserviceId, &orgGid, &acct.AccountName, &acct.AccountDescription, &acct.AccountTypeId,
+		&acct.OrganizationName, &acct.AccountType)
+
+	if err == nil {
+		var guid dml.Guid
+		guid.Guid = acctGid
+		acct.GlAccountId = &guid
+		var oid dml.Guid
+		oid.Guid = orgGid
+		acct.OrganizationId = &oid
+		acct.Created = dml.DateTimeFromString(created)
+		acct.Modified = dml.DateTimeFromString(modified)
+		resp.GlAccount = &acct
+	} else if err == sql.ErrNoRows {
+		resp.ErrorCode = 404
+		resp.ErrorMessage = "not found"
+
+	} else {
+		s.logger.Printf("queryRow failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = err.Error()
+
+	}
+
+	return resp, nil
+}
+
+// get general ledger accounts by organization
+func (s *glService) GetAccountsByOrganization(ctx context.Context, req *pb.GetAccountsByOrganizationRequest) (*pb.GetAccountsByOrganizationResponse, error) {
+	s.logger.Printf("GetAccountsByOrganization called, ordid: %v\n", req.GetOrganizationId())
+	resp := &pb.GetAccountsByOrganizationResponse{}
+
+	sqlstring := `SELECT a.uidGlAccountId, a.dtmCreated, a.dtmModified, a.intVersion, 
+	a.inbMserviceId, a.uidOrganizationId, a.chvAccountName, a.chvAccountDescription, a.intAccountTypeId,
+	o.chvOrganizationName, t.chvAccountType
+	FROM tb_GLAccount AS a
+	JOIN tb_GLOrganization AS o
+	ON a.uidOrganizationId = o.uidOrganizationId AND a.inbMserviceId = o.inbMserviceId
+	JOIN tb_GLAccountType AS t
+    ON a.inbMserviceId = t.inbMserviceId AND a.intAccountTypeId = t.intAccountTypeId
+	WHERE a.inbMserviceId = ? AND a.uidOrganizationId = ? AND a.bitIsDeleted = 0 AND o.bitIsDeleted = 0`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query(req.GetMserviceId(), req.GetOrganizationId().Guid)
+	if err != nil {
+		s.logger.Printf("query failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = err.Error()
+		return resp, nil
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var acctGid []byte
+		var orgGid []byte
+		var created string
+		var modified string
+		var acct pb.GLAccount
+
+		err := rows.Scan(&acctGid, &created, &modified, &acct.Version,
+			&acct.MserviceId, &orgGid, &acct.AccountName, &acct.AccountDescription, &acct.AccountTypeId,
+			&acct.OrganizationName, &acct.AccountType)
+
+		if err != nil {
+			s.logger.Printf("query rows scan  failed: %v\n", err)
+			resp.ErrorCode = 500
+			resp.ErrorMessage = err.Error()
+			return resp, nil
+		}
+
+		var guid dml.Guid
+		guid.Guid = acctGid
+		acct.GlAccountId = &guid
+		var oid dml.Guid
+		oid.Guid = orgGid
+		acct.OrganizationId = &oid
+		acct.Created = dml.DateTimeFromString(created)
+		acct.Modified = dml.DateTimeFromString(modified)
+		resp.GlAccounts = append(resp.GlAccounts, &acct)
+	}
+
+	return resp, nil
+}
+
+// create general ledger transaction
+func (s *glService) CreateTransaction(ctx context.Context, req *pb.CreateTransactionRequest) (*pb.CreateTransactionResponse, error) {
+	s.logger.Printf("CreateTransaction called, mservice: %v\n", req.GetMserviceId())
+	resp := &pb.CreateTransactionResponse{}
+
+	sqlstring := `INSERT INTO tb_GLTransaction (dtmCreated, dtmModified, dtmDeleted, bitIsDeleted, intVersion, inbMserviceId,
+	uidOrganizationId, dtmTransactionDate, chvTransactionDescription, intTransactionTypeId, inbFromPartyId, inbToPartyId,
+	chvPostedViaKey, dtmPostedViaDate) VALUES (NOW(), NOW(), NOW(), 0, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	stmt, err := s.db.Prepare(sqlstring)
+	if err != nil {
+		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		resp.ErrorCode = 500
+		resp.ErrorMessage = "db.Prepare failed"
+		return resp, nil
+	}
+
+	defer stmt.Close()
+
+	var from_party sql.NullInt64
+	var to_party sql.NullInt64
+	var via_key sql.NullString
+	var via_date sql.NullTime
+
+	if req.GetFromPartyId() != 0 {
+		from_party.Int64 = req.GetFromPartyId()
+		from_party.Valid = true
+	}
+
+	if req.GetToPartyId() != 0 {
+		to_party.Int64 = req.GetToPartyId()
+		to_party.Valid = true
+	}
+
+	if req.GetPostedViaKey() != "" {
+		via_key.String = req.GetPostedViaKey()
+		via_key.Valid = true
+	}
+
+	if req.GetPostedViaDate() != nil {
+		via_date.Time = req.GetPostedViaDate().TimeFromDateTime()
+		via_date.Valid = true
+	}
+
+	res, err := stmt.Exec(req.GetMserviceId(), req.GetOrganizationId().Guid, req.GetTransactionDate().TimeFromDateTime(), req.GetTransactionDescription(), req.GetTransactionTypeId(), &from_party, &to_party, &via_key, &via_date)
+
+	if err == nil {
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 1 {
+			transactionId, err := res.LastInsertId()
+			if err != nil {
+				s.logger.Printf("LastInsertId err: %v\n", err)
+			} else {
+				s.logger.Printf("transactionId: %d", transactionId)
+				resp.GlTransactionId = transactionId
+				resp.Version = 1
+			}
+		} else {
+			resp.ErrorCode = 404
+			resp.ErrorMessage = "not found"
+		}
+
+	} else {
+		resp.ErrorCode = 501
+		resp.ErrorMessage = err.Error()
+		s.logger.Printf("err: %v\n", err)
+		err = nil
+	}
+
+	return resp, nil
+}
+
+// update general ledger transaction
+func (s *glService) UpdateTransaction(ctx context.Context, req *pb.UpdateTransactionRequest) (*pb.UpdateTransactionResponse, error) {
+	return nil, NotImplemented
+}
+
+// delete general ledger transaction
+func (s *glService) DeleteTransaction(ctx context.Context, req *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error) {
+	return nil, NotImplemented
+}
+
+// get general ledger transaction by id
+func (s *glService) GetTransactionById(ctx context.Context, req *pb.GetTransactionByIdRequest) (*pb.GetTransactionByIdResponse, error) {
+	return nil, NotImplemented
+}
+
+// get general ledger transaction wrapper by id
+func (s *glService) GetTransactionWrapperById(ctx context.Context, req *pb.GetTransactionWrapperByIdRequest) (*pb.GetTransactionWrapperByIdResponse, error) {
+	return nil, NotImplemented
+}
+
+// get general ledger transaction wrappers by date
+func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.GetTransactionWrappersByDateRequest) (*pb.GetTransactionWrappersByDateResponse, error) {
+	return nil, NotImplemented
+}
+
+// add transaction details
+func (s *glService) AddTransactionDetails(ctx context.Context, req *pb.AddTransactionDetailsRequest) (*pb.AddTransactionDetailsResponse, error) {
+	return nil, NotImplemented
+}

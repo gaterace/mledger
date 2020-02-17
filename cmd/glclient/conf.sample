@@ -1,0 +1,15 @@
+# configuration for glclient
+
+# location of the log file:
+log_file: client_log.txt
+# use TLS/SSL for connection to server:
+tls: true
+# location of the certificate authority file if self signed:
+ca_file:  <location of ca file>
+# optionally override the server host for testing
+# server_host_override: mservice.example.com
+# IP address or domain name of host
+server: 127.0.0.1
+# host port for communication
+port: 50056
+

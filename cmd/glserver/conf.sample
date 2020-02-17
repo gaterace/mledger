@@ -1,0 +1,23 @@
+# configuration for glserver
+
+# location of log file
+log_file: log.txt
+# use TLS/SSL for connection to client:
+tls: true
+# location of certificate file for TLS
+cert_file: < cert.pem location >
+# location of key  file for TLS
+key_file: < key.pem location >
+# host port for communication
+port: 50056
+# mysql user for connection
+db_user: myuser
+# mysql user password for connection
+db_pwd: mypassword
+# mysql transport string
+db_transport: unix(/var/lib/mysql/mysql.sock)
+# location of JWT public credentials
+jwt_pub_file: < jwt_public.pem location >
+# location of JWT private credentials
+jwt_private_file: < jwt_private.pem location >
+

@@ -1,0 +1,1041 @@
+// Copyright 2020 Demian Harvill
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package org.gaterace.mservice.ledger;
+option csharp_namespace = "MServiceLedger";
+option go_package = "mserviceledger";
+
+import "DmlExtension.proto";
+
+service MServiceLedger {
+    // create a new general ledger organization
+    rpc create_organization (CreateOrganizationRequest) returns (CreateOrganizationResponse);
+    // update an existing general ledger organization
+    rpc update_organization (UpdateOrganizationRequest) returns (UpdateOrganizationResponse);
+    // delete an existing general ledger organization
+    rpc delete_organization (DeleteOrganizationRequest) returns (DeleteOrganizationResponse);
+    // get general ledger organization by id
+    rpc get_organization_by_id (GetOrganizationByIdRequest) returns (GetOrganizationByIdResponse);
+    // get general ledger organizations by mservice
+    rpc get_organizations_by_mservice (GetOrganizationsByMserviceRequest) returns (GetOrganizationsByMserviceResponse);
+    // create general ledger account type
+    rpc create_account_type (CreateAccountTypeRequest) returns (CreateAccountTypeResponse);
+    // update general ledger account type
+    rpc update_account_type (UpdateAccountTypeRequest) returns (UpdateAccountTypeResponse);
+    // delete general ledger account type
+    rpc delete_account_type (DeleteAccountTypeRequest) returns (DeleteAccountTypeResponse);
+    // get general ledger account type by id
+    rpc get_account_type_by_id (GetAccountTypeByIdRequest) returns (GetAccountTypeByIdResponse);
+    // get general ledger account types by mservice
+    rpc get_account_types_by_mservice (GetAccountTypesByMserviceRequest) returns (GetAccountTypesByMserviceResponse);
+    // create general ledger transaction type
+    rpc create_transaction_type (CreateTransactionTypeRequest) returns (CreateTransactionTypeResponse);
+    // update general ledger transaction type
+    rpc update_transaction_type (UpdateTransactionTypeRequest) returns (UpdateTransactionTypeResponse);
+    // delete general ledger transaction type
+    rpc delete_transaction_type (DeleteTransactionTypeRequest) returns (DeleteTransactionTypeResponse);
+    // get general ledger transaction type by id
+    rpc get_transaction_type_by_id (GetTransactionTypeByIdRequest) returns (GetTransactionTypeByIdResponse);
+    // get general ledger transaction types by mservice
+    rpc get_transaction_types_by_mservice (GetTransactionTypesByMserviceRequest) returns (GetTransactionTypesByMserviceResponse);
+    // create general ledger party
+    rpc create_party (CreatePartyRequest) returns (CreatePartyResponse);
+    // update general ledger party
+    rpc update_party (UpdatePartyRequest) returns (UpdatePartyResponse);
+    // delete general ledger party
+    rpc delete_party (DeletePartyRequest) returns (DeletePartyResponse);
+    // get general ledger party by id
+    rpc get_party_by_id (GetPartyByIdRequest) returns (GetPartyByIdResponse);
+    // get general ledger parties by mservice
+    rpc get_parties_by_mservice (GetPartiesByMserviceRequest) returns (GetPartiesByMserviceResponse);
+    // create general ledger account
+    rpc create_account (CreateAccountRequest) returns (CreateAccountResponse);
+    // update general ledger account
+    rpc update_account (UpdateAccountRequest) returns (UpdateAccountResponse);
+    // delete general ledger account
+    rpc delete_account (DeleteAccountRequest) returns (DeleteAccountResponse);
+    // get general ledger account by id
+    rpc get_account_by_id (GetAccountByIdRequest) returns (GetAccountByIdResponse);
+    // get general ledger accounts by organization
+    rpc get_accounts_by_organization (GetAccountsByOrganizationRequest) returns (GetAccountsByOrganizationResponse);
+    // create general ledger transaction
+    rpc create_transaction (CreateTransactionRequest) returns (CreateTransactionResponse);
+    // update general ledger transaction
+    rpc update_transaction (UpdateTransactionRequest) returns (UpdateTransactionResponse);
+    // delete general ledger transaction
+    rpc delete_transaction (DeleteTransactionRequest) returns (DeleteTransactionResponse);
+    // get general ledger transaction by id
+    rpc get_transaction_by_id (GetTransactionByIdRequest) returns (GetTransactionByIdResponse);
+    // get general ledger transaction wrapper by id
+    rpc get_transaction_wrapper_by_id (GetTransactionWrapperByIdRequest) returns (GetTransactionWrapperByIdResponse);
+    // get general ledger transaction wrappers by date
+    rpc get_transaction_wrappers_by_date (GetTransactionWrappersByDateRequest) returns (GetTransactionWrappersByDateResponse);
+    // add transaction details
+    rpc add_transaction_details (AddTransactionDetailsRequest) returns (AddTransactionDetailsResponse);
+  
+}
+
+
+
+// MService general ledger organization entity
+message GLOrganization {
+    // organization unique identifier
+    dml.Guid organization_id = 1;
+    // creation date
+    dml.DateTime created = 2;
+    // modification date
+    dml.DateTime modified = 3;
+    // deletion date
+    dml.DateTime deleted = 4;
+    // has record been deleted?
+    bool is_deleted = 5;
+    // version of this record
+    int32 version = 6;
+    // MService account id
+    int64 mservice_id = 7;
+    // organization name
+    string organization_name = 8;
+    // starting date for organization books
+    dml.DateTime from_date = 9;
+    // ending date for organization books
+    dml.DateTime to_date = 10;
+
+}
+
+// MService general ledger account entity
+message GLAccount {
+    // general ledger account unique identifier
+    dml.Guid gl_account_id = 1;
+    // creation date
+    dml.DateTime created = 2;
+    // modification date
+    dml.DateTime modified = 3;
+    // deletion date
+    dml.DateTime deleted = 4;
+    // has record been deleted?
+    bool is_deleted = 5;
+    // version of this record
+    int32 version = 6;
+    // MService account id
+    int64 mservice_id = 7;
+    // organization unique identifier
+    dml.Guid organization_id = 8;
+    // organization name
+    string organization_name = 9;
+    // general ledger account name
+    string account_name = 10;
+    // general ledger account description
+    string account_description = 11;
+    // general ledger account type identifier
+    int32 account_type_id = 12;
+    // general ledger account type
+    string account_type = 13;
+
+}
+
+// MService general ledger account type entity
+message GLAccountType {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger account type identifier
+    int32 account_type_id = 2;
+    // creation date
+    dml.DateTime created = 3;
+    // modification date
+    dml.DateTime modified = 4;
+    // deletion date
+    dml.DateTime deleted = 5;
+    // has record been deleted?
+    bool is_deleted = 6;
+    // version of this record
+    int32 version = 7;
+    // general ledger account type
+    string account_type = 8;
+
+}
+
+// MService general ledger transaction entity
+message GLTransaction {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // creation date
+    dml.DateTime created = 2;
+    // modification date
+    dml.DateTime modified = 3;
+    // deletion date
+    dml.DateTime deleted = 4;
+    // has record been deleted?
+    bool is_deleted = 5;
+    // version of this record
+    int32 version = 6;
+    // MService account id
+    int64 mservice_id = 7;
+    // organization unique identifier
+    dml.Guid organization_id = 8;
+    // transaction date
+    dml.DateTime transaction_date = 9;
+    // transaction description
+    string transaction_description = 10;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 11;
+    // transaction type description
+    string transaction_type = 12;
+    // identifier of transaction from party
+    int64 from_party_id = 13;
+    // from party name
+    string from_party_name = 14;
+    // identifier of transaction to party
+    int64 to_party_id = 15;
+    // to party name
+    string to_party_name = 16;
+    // associated key from external system
+    string posted_via_key = 17;
+    // date posted on external system
+    dml.DateTime posted_via_date = 18;
+
+}
+
+// MService general ledger transaction entity wrapper
+message GLTransactionWrapper {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // creation date
+    dml.DateTime created = 2;
+    // modification date
+    dml.DateTime modified = 3;
+    // deletion date
+    dml.DateTime deleted = 4;
+    // has record been deleted?
+    bool is_deleted = 5;
+    // version of this record
+    int32 version = 6;
+    // MService account id
+    int64 mservice_id = 7;
+    // organization unique identifier
+    dml.Guid organization_id = 8;
+    // transaction date
+    dml.DateTime transaction_date = 9;
+    // transaction description
+    string transaction_description = 10;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 11;
+    // transaction type description
+    string transaction_type = 12;
+    // identifier of transaction from party
+    int64 from_party_id = 13;
+    // from party name
+    string from_party_name = 14;
+    // identifier of transaction to party
+    int64 to_party_id = 15;
+    // to party name
+    string to_party_name = 16;
+    // associated key from external system
+    string posted_via_key = 17;
+    // date posted on external system
+    dml.DateTime posted_via_date = 18;
+    // list of general ledger transaction detail objects
+    repeated GLTransactionDetail gl_transaction_details = 19;
+
+}
+
+// MService general ledger transaction type entity
+message GLTransactionType {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 2;
+    // creation date
+    dml.DateTime created = 3;
+    // modification date
+    dml.DateTime modified = 4;
+    // deletion date
+    dml.DateTime deleted = 5;
+    // has record been deleted?
+    bool is_deleted = 6;
+    // version of this record
+    int32 version = 7;
+    // transaction type description
+    string transaction_type = 8;
+
+}
+
+// MService general ledger transaction party entity
+message GLParty {
+    // MService account id
+    int64 mservice_id = 1;
+    // transaction party identifier
+    int64 party_id = 2;
+    // creation date
+    dml.DateTime created = 3;
+    // modification date
+    dml.DateTime modified = 4;
+    // deletion date
+    dml.DateTime deleted = 5;
+    // has record been deleted?
+    bool is_deleted = 6;
+    // version of this record
+    int32 version = 7;
+    // transaction party name
+    string party_name = 8;
+
+}
+
+// MService general ledger transaction detail entity
+message GLTransactionDetail {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // transaction detail sequence number
+    int32 sequence_number = 2;
+    // general ledger account unique identifier
+    dml.Guid gl_account_id = 3;
+    // general ledger account name
+    string account_name = 4;
+    // transaction detail amount
+    dml.Decimal amount = 5;
+    // transaction detail is debit (true) else credit
+    bool is_debit = 6;
+
+}
+
+// request parameters for method create_organization
+message CreateOrganizationRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // organization name
+    string organization_name = 2;
+    // starting date for organization books
+    dml.DateTime from_date = 3;
+    // ending date for organization books
+    dml.DateTime to_date = 4;
+
+}
+
+// response parameters for method create_organization
+message CreateOrganizationResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // organization unique identifier
+    dml.Guid organization_id = 3;
+    // version of this record
+    int32 version = 4;
+
+}
+
+// request parameters for method update_organization
+message UpdateOrganizationRequest {
+    // organization unique identifier
+    dml.Guid organization_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+    // version of this record
+    int32 version = 3;
+    // organization name
+    string organization_name = 4;
+    // starting date for organization books
+    dml.DateTime from_date = 5;
+    // ending date for organization books
+    dml.DateTime to_date = 6;
+
+}
+
+// response parameters for method update_organization
+message UpdateOrganizationResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method delete_organization
+message DeleteOrganizationRequest {
+    // organization unique identifier
+    dml.Guid organization_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// response parameters for method delete_organization
+message DeleteOrganizationResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method get_organization_by_id
+message GetOrganizationByIdRequest {
+    // organization unique identifier
+    dml.Guid organization_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+
+}
+
+// response parameters for method get_organization_by_id
+message GetOrganizationByIdResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger organization object
+    GLOrganization gl_organization = 3;
+
+}
+
+// request parameters for method get_organizations_by_mservice
+message GetOrganizationsByMserviceRequest {
+    // MService account id
+    int64 mservice_id = 1;
+
+}
+
+// response parameters for method get_organizations_by_mservice
+message GetOrganizationsByMserviceResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // list of general ledger organization objects
+    repeated GLOrganization gl_organizations = 3;
+
+}
+
+// request parameters for method create_account_type
+message CreateAccountTypeRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger account type identifier
+    int32 account_type_id = 2;
+    // general ledger account type
+    string account_type = 3;
+
+}
+
+// response parameters for method create_account_type
+message CreateAccountTypeResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method update_account_type
+message UpdateAccountTypeRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger account type identifier
+    int32 account_type_id = 2;
+    // version of this record
+    int32 version = 3;
+    // general ledger account type
+    string account_type = 4;
+
+}
+
+// response parameters for method update_account_type
+message UpdateAccountTypeResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method delete_account_type
+message DeleteAccountTypeRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger account type identifier
+    int32 account_type_id = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// response parameters for method delete_account_type
+message DeleteAccountTypeResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method get_account_type_by_id
+message GetAccountTypeByIdRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger account type identifier
+    int32 account_type_id = 2;
+
+}
+
+// response parameters for method get_account_type_by_id
+message GetAccountTypeByIdResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger account type object
+    GLAccountType gl_account_type = 3;
+
+}
+
+// request parameters for method get_account_types_by_mservice
+message GetAccountTypesByMserviceRequest {
+    // MService account id
+    int64 mservice_id = 1;
+
+}
+
+// response parameters for method get_account_types_by_mservice
+message GetAccountTypesByMserviceResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // list of general ledger account type objects
+    repeated GLAccountType gl_account_types = 3;
+
+}
+
+// request parameters for method create_transaction_type
+message CreateTransactionTypeRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 2;
+    // transaction type description
+    string transaction_type = 3;
+
+}
+
+// response parameters for method create_transaction_type
+message CreateTransactionTypeResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method update_transaction_type
+message UpdateTransactionTypeRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 2;
+    // version of this record
+    int32 version = 3;
+    // transaction type description
+    string transaction_type = 4;
+
+}
+
+// response parameters for method update_transaction_type
+message UpdateTransactionTypeResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method delete_transaction_type
+message DeleteTransactionTypeRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// response parameters for method delete_transaction_type
+message DeleteTransactionTypeResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method get_transaction_type_by_id
+message GetTransactionTypeByIdRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 2;
+
+}
+
+// response parameters for method get_transaction_type_by_id
+message GetTransactionTypeByIdResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger transaction type object
+    GLTransactionType gl_transaction_type = 3;
+
+}
+
+// request parameters for method get_transaction_types_by_mservice
+message GetTransactionTypesByMserviceRequest {
+    // MService account id
+    int64 mservice_id = 1;
+
+}
+
+// response parameters for method get_transaction_types_by_mservice
+message GetTransactionTypesByMserviceResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // list of general ledger transaction type objects
+    repeated GLTransactionType gl_transaction_types = 3;
+
+}
+
+// request parameters for method create_party
+message CreatePartyRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // transaction party identifier
+    int64 party_id = 2;
+    // transaction party name
+    string party_name = 3;
+
+}
+
+// response parameters for method create_party
+message CreatePartyResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method update_party
+message UpdatePartyRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // transaction party identifier
+    int64 party_id = 2;
+    // version of this record
+    int32 version = 3;
+    // transaction party name
+    string party_name = 4;
+
+}
+
+// response parameters for method update_party
+message UpdatePartyResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method delete_party
+message DeletePartyRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // transaction party identifier
+    int64 party_id = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// response parameters for method delete_party
+message DeletePartyResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method get_party_by_id
+message GetPartyByIdRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // transaction party identifier
+    int64 party_id = 2;
+
+}
+
+// response parameters for method get_party_by_id
+message GetPartyByIdResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger transaction party object
+    GLParty gl_party = 3;
+
+}
+
+// request parameters for method get_parties_by_mservice
+message GetPartiesByMserviceRequest {
+    // MService account id
+    int64 mservice_id = 1;
+
+}
+
+// response parameters for method get_parties_by_mservice
+message GetPartiesByMserviceResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // list of general ledger transaction party objects
+    repeated GLParty gl_parties = 3;
+
+}
+
+// request parameters for method create_account
+message CreateAccountRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // organization unique identifier
+    dml.Guid organization_id = 2;
+    // general ledger account name
+    string account_name = 3;
+    // general ledger account description
+    string account_description = 4;
+    // general ledger account type identifier
+    int32 account_type_id = 5;
+
+}
+
+// response parameters for method create_account
+message CreateAccountResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger account unique identifier
+    dml.Guid gl_account_id = 3;
+    // version of this record
+    int32 version = 4;
+
+}
+
+// request parameters for method update_account
+message UpdateAccountRequest {
+    // general ledger account unique identifier
+    dml.Guid gl_account_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+    // version of this record
+    int32 version = 3;
+    // general ledger account name
+    string account_name = 4;
+    // general ledger account description
+    string account_description = 5;
+    // general ledger account type identifier
+    int32 account_type_id = 6;
+
+}
+
+// response parameters for method update_account
+message UpdateAccountResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method delete_account
+message DeleteAccountRequest {
+    // general ledger account unique identifier
+    dml.Guid gl_account_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// response parameters for method delete_account
+message DeleteAccountResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method get_account_by_id
+message GetAccountByIdRequest {
+    // general ledger account unique identifier
+    dml.Guid gl_account_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+
+}
+
+// response parameters for method get_account_by_id
+message GetAccountByIdResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger account object
+    GLAccount gl_account = 3;
+
+}
+
+// request parameters for method get_accounts_by_organization
+message GetAccountsByOrganizationRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // organization unique identifier
+    dml.Guid organization_id = 2;
+
+}
+
+// response parameters for method get_accounts_by_organization
+message GetAccountsByOrganizationResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // list of general ledger account objects
+    repeated GLAccount gl_accounts = 3;
+
+}
+
+// request parameters for method create_transaction
+message CreateTransactionRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // organization unique identifier
+    dml.Guid organization_id = 2;
+    // transaction date
+    dml.DateTime transaction_date = 3;
+    // transaction description
+    string transaction_description = 4;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 5;
+    // identifier of transaction from party
+    int64 from_party_id = 6;
+    // identifier of transaction to party
+    int64 to_party_id = 7;
+    // associated key from external system
+    string posted_via_key = 8;
+    // date posted on external system
+    dml.DateTime posted_via_date = 9;
+
+}
+
+// response parameters for method create_transaction
+message CreateTransactionResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 3;
+    // version of this record
+    int32 version = 4;
+
+}
+
+// request parameters for method update_transaction
+message UpdateTransactionRequest {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+    // version of this record
+    int32 version = 3;
+    // transaction date
+    dml.DateTime transaction_date = 4;
+    // transaction description
+    string transaction_description = 5;
+    // general ledger transaction type identifier
+    int32 transaction_type_id = 6;
+    // identifier of transaction from party
+    int64 from_party_id = 7;
+    // identifier of transaction to party
+    int64 to_party_id = 8;
+    // associated key from external system
+    string posted_via_key = 9;
+    // date posted on external system
+    dml.DateTime posted_via_date = 10;
+
+}
+
+// response parameters for method update_transaction
+message UpdateTransactionResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method delete_transaction
+message DeleteTransactionRequest {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// response parameters for method delete_transaction
+message DeleteTransactionResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version of this record
+    int32 version = 3;
+
+}
+
+// request parameters for method get_transaction_by_id
+message GetTransactionByIdRequest {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+
+}
+
+// response parameters for method get_transaction_by_id
+message GetTransactionByIdResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger transaction object
+    GLTransaction gl_transaction = 3;
+
+}
+
+// request parameters for method get_transaction_wrapper_by_id
+message GetTransactionWrapperByIdRequest {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+
+}
+
+// response parameters for method get_transaction_wrapper_by_id
+message GetTransactionWrapperByIdResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // general ledger transaction object with transaction details
+    GLTransactionWrapper gl_transaction_wrapper = 3;
+
+}
+
+// request parameters for method get_transaction_wrappers_by_date
+message GetTransactionWrappersByDateRequest {
+    // MService account id
+    int64 mservice_id = 1;
+    // organization unique identifier
+    dml.Guid organization_id = 2;
+    // start date for search
+    dml.DateTime start_date = 3;
+    // end date for search
+    dml.DateTime end_date = 4;
+
+}
+
+// response parameters for method get_transaction_wrappers_by_date
+message GetTransactionWrappersByDateResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // list of general ledger transaction objects with transaction details
+    repeated GLTransactionWrapper gl_transaction_wrappers = 3;
+
+}
+
+// request parameters for method add_transaction_details
+message AddTransactionDetailsRequest {
+    // general ledger transaction unique identifier
+    int64 gl_transaction_id = 1;
+    // MService account id
+    int64 mservice_id = 2;
+    // list of general ledger transaction detail objects
+    repeated GLTransactionDetail gl_transaction_details = 3;
+
+}
+
+// response parameters for method add_transaction_details
+message AddTransactionDetailsResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+
+}
+
+
+
