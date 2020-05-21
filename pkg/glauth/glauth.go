@@ -644,3 +644,9 @@ func (s *glAuth) AddTransactionDetails(ctx context.Context, req *pb.AddTransacti
 	resp.ErrorMessage = "not authorized"
 	return resp, nil
 }
+
+// get current server version and uptime - health check
+func (s *glAuth) GetServerVersion(ctx context.Context, req *pb.GetServerVersionRequest) (*pb.GetServerVersionResponse, error) {
+	return s.glService.GetServerVersion(ctx, req)
+}
+

@@ -524,6 +524,18 @@ func (s *glService) AddTransactionDetails(ctx context.Context, req *pb.AddTransa
 	return resp, nil
 }
 
+// get current server version and uptime - health check
+func (s *glService) GetServerVersion(ctx context.Context, req *pb.GetServerVersionRequest) (*pb.GetServerVersionResponse, error) {
+	s.logger.Printf("GetServerVersion called\n")
+	resp := &pb.GetServerVersionResponse{}
+
+	currentSecs := time.Now().Unix()
+	resp.ServerVersion = "v0.9.2"
+	resp.ServerUptime = currentSecs - s.startSecs
+
+	return resp, nil
+}
+
 func (s *glService) CommitTransactionDetails(details []*pb.GLTransactionDetail) error {
 	tx, err := s.db.Begin()
 	if err != nil {

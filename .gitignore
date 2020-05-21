@@ -17,6 +17,8 @@
 Gopkg.lock
 vendor/*
 
+.idea/
+
 mledger.sublime-*
 
 *~

@@ -128,6 +128,8 @@ func main() {
 		fmt.Printf("    %s add_transaction_details --id <id> --json <json>\n", prog)
 		fmt.Println("    example: --json '[{\"aid\": \"0123456789abcdef0123456789abcdef\", \"amt\": \"10.00\", \"debit\": true}, [\"aid\": \"3210456789abcdef0123456789abcdef\", \"amt\":\"10.00\"}]'")
 
+		fmt.Printf("    %s get_server_version \n", prog)
+
 		os.Exit(1)
 	}
 
@@ -524,6 +526,8 @@ func main() {
 			validParams = false
 		}
 		fmt.Printf("details: %v\n", details)
+	case "get_server_version":
+		validParams = true
 
 	default:
 		fmt.Printf("unknown command: %s\n", cmd)
@@ -815,8 +819,12 @@ func main() {
 		req.GlTransactionDetails = details
 		resp, err := client.AddTransactionDetails(mctx, &req)
 		printResponse(resp, err)
+	case "get_server_version":
+		req := pb.GetServerVersionRequest{}
+		req.DummyParam = 1
+		resp, err := client.GetServerVersion(mctx, &req)
+		printResponse(resp, err)
 	}
-
 }
 
 // Helper to print api method response as JSON.

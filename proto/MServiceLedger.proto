@@ -19,6 +19,8 @@ option go_package = "mserviceledger";
 
 import "DmlExtension.proto";
 
+
+
 service MServiceLedger {
     // create a new general ledger organization
     rpc create_organization (CreateOrganizationRequest) returns (CreateOrganizationResponse);
@@ -84,6 +86,8 @@ service MServiceLedger {
     rpc get_transaction_wrappers_by_date (GetTransactionWrappersByDateRequest) returns (GetTransactionWrappersByDateResponse);
     // add transaction details
     rpc add_transaction_details (AddTransactionDetailsRequest) returns (AddTransactionDetailsResponse);
+    // get current server version and uptime - health check
+    rpc get_server_version (GetServerVersionRequest) returns (GetServerVersionResponse);
   
 }
 
@@ -1034,6 +1038,26 @@ message AddTransactionDetailsResponse {
     int32 error_code = 1;
     // text error message
     string error_message = 2;
+
+}
+
+// request parameters for method get_server_version
+message GetServerVersionRequest {
+    // placeholder param to avoid empty message
+    int32 dummy_param = 1;
+
+}
+
+// response parameters for method get_server_version
+message GetServerVersionResponse {
+    // method result code
+    int32 error_code = 1;
+    // text error message
+    string error_message = 2;
+    // version level of server
+    string server_version = 3;
+    // server uptime in seconds
+    int64 server_uptime = 4;
 
 }
 

@@ -38,11 +38,13 @@ var emptyDateString = "0000-00-00 00:00:00"
 type glService struct {
 	logger *log.Logger
 	db     *sql.DB
+	startSecs int64
 }
 
 // Get a new projService instance.
 func NewGlService() *glService {
 	svc := glService{}
+	svc.startSecs = time.Now().Unix()
 	return &svc
 }
 
