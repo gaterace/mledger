@@ -1,6 +1,6 @@
 # configuration for glserver
 
-# location of log file
+# location of log file, leave unset to log to os.stderr
 log_file: log.txt
 # use TLS/SSL for connection to client:
 tls: true
