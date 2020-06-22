@@ -16,6 +16,7 @@ package glservice
 import (
 	"context"
 	"database/sql"
+	"github.com/go-kit/kit/log/level"
 	"time"
 
 	"github.com/gaterace/dml-go/pkg/dml"
@@ -27,7 +28,6 @@ import (
 
 // create general ledger transaction type
 func (s *glService) CreateTransactionType(ctx context.Context, req *pb.CreateTransactionTypeRequest) (*pb.CreateTransactionTypeResponse, error) {
-	s.logger.Printf("CreateTransactionType called, id: %d\n", req.GetTransactionTypeId())
 	resp := &pb.CreateTransactionTypeResponse{}
 
 	sqlstring := `INSERT INTO tb_GLTransactionType (inbMserviceId, intTransactionTypeId, dtmCreated, dtmModified, 
@@ -36,7 +36,7 @@ func (s *glService) CreateTransactionType(ctx context.Context, req *pb.CreateTra
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -57,7 +57,7 @@ func (s *glService) CreateTransactionType(ctx context.Context, req *pb.CreateTra
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -66,7 +66,6 @@ func (s *glService) CreateTransactionType(ctx context.Context, req *pb.CreateTra
 
 // update general ledger transaction type
 func (s *glService) UpdateTransactionType(ctx context.Context, req *pb.UpdateTransactionTypeRequest) (*pb.UpdateTransactionTypeResponse, error) {
-	s.logger.Printf("UpdateTransactionType called, id: %d\n", req.GetTransactionTypeId())
 	resp := &pb.UpdateTransactionTypeResponse{}
 
 	sqlstring := `UPDATE tb_GLTransactionType SET dtmModified = NOW(), intVersion = ?, chvTransactionType = ?
@@ -74,7 +73,7 @@ func (s *glService) UpdateTransactionType(ctx context.Context, req *pb.UpdateTra
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -95,7 +94,7 @@ func (s *glService) UpdateTransactionType(ctx context.Context, req *pb.UpdateTra
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -104,7 +103,6 @@ func (s *glService) UpdateTransactionType(ctx context.Context, req *pb.UpdateTra
 
 // delete general ledger transaction type
 func (s *glService) DeleteTransactionType(ctx context.Context, req *pb.DeleteTransactionTypeRequest) (*pb.DeleteTransactionTypeResponse, error) {
-	s.logger.Printf("DeleteTransactionType called, id: %d\n", req.GetTransactionTypeId())
 	resp := &pb.DeleteTransactionTypeResponse{}
 
 	sqlstring := `UPDATE tb_GLTransactionType SET dtmDeleted = NOW(), intVersion = ?, bitIsDeleted = 1
@@ -112,7 +110,7 @@ func (s *glService) DeleteTransactionType(ctx context.Context, req *pb.DeleteTra
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -133,7 +131,7 @@ func (s *glService) DeleteTransactionType(ctx context.Context, req *pb.DeleteTra
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -142,7 +140,6 @@ func (s *glService) DeleteTransactionType(ctx context.Context, req *pb.DeleteTra
 
 // get general ledger transaction type by id
 func (s *glService) GetTransactionTypeById(ctx context.Context, req *pb.GetTransactionTypeByIdRequest) (*pb.GetTransactionTypeByIdResponse, error) {
-	s.logger.Printf("GetTransactionTypeById called, id: %d\n", req.GetTransactionTypeId())
 	resp := &pb.GetTransactionTypeByIdResponse{}
 
 	sqlstring := `SELECT inbMserviceId, intTransactionTypeId, dtmCreated, dtmModified, intVersion, chvTransactionType
@@ -150,7 +147,7 @@ func (s *glService) GetTransactionTypeById(ctx context.Context, req *pb.GetTrans
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -173,7 +170,7 @@ func (s *glService) GetTransactionTypeById(ctx context.Context, req *pb.GetTrans
 		resp.ErrorMessage = "not found"
 
 	} else {
-		s.logger.Printf("queryRow failed: %v\n", err)
+		level.Error(s.logger).Log("what", "QueryRow", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 
@@ -184,7 +181,6 @@ func (s *glService) GetTransactionTypeById(ctx context.Context, req *pb.GetTrans
 
 // get general ledger transaction types by mservice
 func (s *glService) GetTransactionTypesByMservice(ctx context.Context, req *pb.GetTransactionTypesByMserviceRequest) (*pb.GetTransactionTypesByMserviceResponse, error) {
-	s.logger.Printf("GetTransactionTypesByMservice called, mservice: %d\n", req.GetMserviceId())
 	resp := &pb.GetTransactionTypesByMserviceResponse{}
 
 	sqlstring := `SELECT inbMserviceId, intTransactionTypeId, dtmCreated, dtmModified, intVersion, chvTransactionType
@@ -192,7 +188,7 @@ func (s *glService) GetTransactionTypesByMservice(ctx context.Context, req *pb.G
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -202,7 +198,7 @@ func (s *glService) GetTransactionTypesByMservice(ctx context.Context, req *pb.G
 
 	rows, err := stmt.Query(req.GetMserviceId())
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -215,7 +211,7 @@ func (s *glService) GetTransactionTypesByMservice(ctx context.Context, req *pb.G
 		var tranType pb.GLTransactionType
 		err := rows.Scan(&tranType.MserviceId, &tranType.TransactionTypeId, &created, &modified, &tranType.Version, &tranType.TransactionType)
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil
@@ -232,7 +228,6 @@ func (s *glService) GetTransactionTypesByMservice(ctx context.Context, req *pb.G
 
 // create general ledger party
 func (s *glService) CreateParty(ctx context.Context, req *pb.CreatePartyRequest) (*pb.CreatePartyResponse, error) {
-	s.logger.Printf("CreateParty called, id: %d\n", req.GetPartyId())
 	resp := &pb.CreatePartyResponse{}
 
 	sqlstring := `INSERT INTO tb_GLParty (inbMserviceId, inbPartyId, dtmCreated, dtmModified, dtmDeleted, bitIsDeleted, intVersion, 
@@ -240,7 +235,7 @@ func (s *glService) CreateParty(ctx context.Context, req *pb.CreatePartyRequest)
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -261,7 +256,7 @@ func (s *glService) CreateParty(ctx context.Context, req *pb.CreatePartyRequest)
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -270,7 +265,6 @@ func (s *glService) CreateParty(ctx context.Context, req *pb.CreatePartyRequest)
 
 // update general ledger party
 func (s *glService) UpdateParty(ctx context.Context, req *pb.UpdatePartyRequest) (*pb.UpdatePartyResponse, error) {
-	s.logger.Printf("UpdateParty called, id: %d\n", req.GetPartyId())
 	resp := &pb.UpdatePartyResponse{}
 
 	sqlstring := `UPDATE tb_GLParty SET dtmModified = NOW(), intVersion = ?, chvPartyName = ? WHERE 
@@ -278,7 +272,7 @@ func (s *glService) UpdateParty(ctx context.Context, req *pb.UpdatePartyRequest)
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -299,7 +293,7 @@ func (s *glService) UpdateParty(ctx context.Context, req *pb.UpdatePartyRequest)
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -308,7 +302,6 @@ func (s *glService) UpdateParty(ctx context.Context, req *pb.UpdatePartyRequest)
 
 // delete general ledger party
 func (s *glService) DeleteParty(ctx context.Context, req *pb.DeletePartyRequest) (*pb.DeletePartyResponse, error) {
-	s.logger.Printf("DeleteParty called, id: %d\n", req.GetPartyId())
 	resp := &pb.DeletePartyResponse{}
 
 	sqlstring := `UPDATE tb_GLParty SET dtmDeleted = NOW(), intVersion = ?, bitIsDeleted = 1 WHERE 
@@ -316,7 +309,7 @@ func (s *glService) DeleteParty(ctx context.Context, req *pb.DeletePartyRequest)
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -337,7 +330,7 @@ func (s *glService) DeleteParty(ctx context.Context, req *pb.DeletePartyRequest)
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -346,7 +339,6 @@ func (s *glService) DeleteParty(ctx context.Context, req *pb.DeletePartyRequest)
 
 // get general ledger party by id
 func (s *glService) GetPartyById(ctx context.Context, req *pb.GetPartyByIdRequest) (*pb.GetPartyByIdResponse, error) {
-	s.logger.Printf("GetPartyById called, id: %d\n", req.GetPartyId())
 	resp := &pb.GetPartyByIdResponse{}
 
 	sqlstring := `SELECT inbMserviceId, inbPartyId, dtmCreated, dtmModified, intVersion, chvPartyName
@@ -354,7 +346,7 @@ func (s *glService) GetPartyById(ctx context.Context, req *pb.GetPartyByIdReques
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -378,7 +370,7 @@ func (s *glService) GetPartyById(ctx context.Context, req *pb.GetPartyByIdReques
 		resp.ErrorMessage = "not found"
 
 	} else {
-		s.logger.Printf("queryRow failed: %v\n", err)
+		level.Error(s.logger).Log("what", "QueryRow", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 
@@ -389,7 +381,6 @@ func (s *glService) GetPartyById(ctx context.Context, req *pb.GetPartyByIdReques
 
 // get general ledger parties by mservice
 func (s *glService) GetPartiesByMservice(ctx context.Context, req *pb.GetPartiesByMserviceRequest) (*pb.GetPartiesByMserviceResponse, error) {
-	s.logger.Printf("GetPartiesByMservice called, mservice: %d\n", req.GetMserviceId())
 	resp := &pb.GetPartiesByMserviceResponse{}
 
 	sqlstring := `SELECT inbMserviceId, inbPartyId, dtmCreated, dtmModified, intVersion, chvPartyName
@@ -397,7 +388,7 @@ func (s *glService) GetPartiesByMservice(ctx context.Context, req *pb.GetParties
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -407,7 +398,7 @@ func (s *glService) GetPartiesByMservice(ctx context.Context, req *pb.GetParties
 
 	rows, err := stmt.Query(req.GetMserviceId())
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -422,7 +413,7 @@ func (s *glService) GetPartiesByMservice(ctx context.Context, req *pb.GetParties
 		err := rows.Scan(&party.MserviceId, &party.PartyId, &created, &modified, &party.Version, &party.PartyName)
 
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil
@@ -438,7 +429,6 @@ func (s *glService) GetPartiesByMservice(ctx context.Context, req *pb.GetParties
 
 // create general ledger account
 func (s *glService) CreateAccount(ctx context.Context, req *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error) {
-	s.logger.Printf("CreateAccount called, name: %s\n", req.GetAccountName())
 	resp := &pb.CreateAccountResponse{}
 
 	sqlstring := `INSERT INTO tb_GLAccount (uidGlAccountId, dtmCreated, dtmModified, dtmDeleted, bitIsDeleted, intVersion, 
@@ -447,7 +437,7 @@ func (s *glService) CreateAccount(ctx context.Context, req *pb.CreateAccountRequ
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -473,7 +463,7 @@ func (s *glService) CreateAccount(ctx context.Context, req *pb.CreateAccountRequ
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -482,7 +472,6 @@ func (s *glService) CreateAccount(ctx context.Context, req *pb.CreateAccountRequ
 
 // update general ledger account
 func (s *glService) UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequest) (*pb.UpdateAccountResponse, error) {
-	s.logger.Printf("UpdateAccount called, name: %s\n", req.GetAccountName())
 	resp := &pb.UpdateAccountResponse{}
 
 	sqlstring := `UPDATE tb_GLAccount SET dtmModified = NOW(), intVersion = ?, chvAccountName = ?, chvAccountDescription = ?, 
@@ -490,7 +479,7 @@ func (s *glService) UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequ
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -512,7 +501,7 @@ func (s *glService) UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequ
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -521,7 +510,6 @@ func (s *glService) UpdateAccount(ctx context.Context, req *pb.UpdateAccountRequ
 
 // delete general ledger account
 func (s *glService) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequest) (*pb.DeleteAccountResponse, error) {
-	s.logger.Printf("DeleteAccount called, guid: %v\n", req.GetGlAccountId())
 	resp := &pb.DeleteAccountResponse{}
 
 	sqlstring := `UPDATE tb_GLAccount SET dtmDeleted = NOW(), bitIsDeleted = 1, intVersion = ? 
@@ -529,7 +517,7 @@ func (s *glService) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequ
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -550,7 +538,7 @@ func (s *glService) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequ
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -559,7 +547,6 @@ func (s *glService) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequ
 
 // get general ledger account by id
 func (s *glService) GetAccountById(ctx context.Context, req *pb.GetAccountByIdRequest) (*pb.GetAccountByIdResponse, error) {
-	s.logger.Printf("GetAccountById called, guid: %v\n", req.GetGlAccountId())
 	resp := &pb.GetAccountByIdResponse{}
 
 	sqlstring := `SELECT a.uidGlAccountId, a.dtmCreated, a.dtmModified, a.intVersion, 
@@ -574,7 +561,7 @@ func (s *glService) GetAccountById(ctx context.Context, req *pb.GetAccountByIdRe
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -603,7 +590,7 @@ func (s *glService) GetAccountById(ctx context.Context, req *pb.GetAccountByIdRe
 		resp.ErrorMessage = "not found"
 
 	} else {
-		s.logger.Printf("queryRow failed: %v\n", err)
+		level.Error(s.logger).Log("what", "QueryRow", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 
@@ -614,7 +601,6 @@ func (s *glService) GetAccountById(ctx context.Context, req *pb.GetAccountByIdRe
 
 // get general ledger accounts by organization
 func (s *glService) GetAccountsByOrganization(ctx context.Context, req *pb.GetAccountsByOrganizationRequest) (*pb.GetAccountsByOrganizationResponse, error) {
-	s.logger.Printf("GetAccountsByOrganization called, ordid: %v\n", req.GetOrganizationId())
 	resp := &pb.GetAccountsByOrganizationResponse{}
 
 	sqlstring := `SELECT a.uidGlAccountId, a.dtmCreated, a.dtmModified, a.intVersion, 
@@ -629,7 +615,7 @@ func (s *glService) GetAccountsByOrganization(ctx context.Context, req *pb.GetAc
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -639,7 +625,7 @@ func (s *glService) GetAccountsByOrganization(ctx context.Context, req *pb.GetAc
 
 	rows, err := stmt.Query(req.GetMserviceId(), req.GetOrganizationId().Guid)
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -658,7 +644,7 @@ func (s *glService) GetAccountsByOrganization(ctx context.Context, req *pb.GetAc
 			&acct.OrganizationName, &acct.AccountType)
 
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil

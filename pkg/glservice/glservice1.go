@@ -18,7 +18,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+
 	"regexp"
 	"time"
 
@@ -36,7 +38,7 @@ var nameValidator = regexp.MustCompile("^[a-z0-9_\\-]{1,32}$")
 var emptyDateString = "0000-00-00 00:00:00"
 
 type glService struct {
-	logger *log.Logger
+	logger log.Logger
 	db     *sql.DB
 	startSecs int64
 }
@@ -49,7 +51,7 @@ func NewGlService() *glService {
 }
 
 // Set the logger for the glService instance.
-func (s *glService) SetLogger(logger *log.Logger) {
+func (s *glService) SetLogger(logger log.Logger) {
 	s.logger = logger
 }
 
@@ -69,7 +71,6 @@ func (s *glService) NewApiServer(gServer *grpc.Server) error {
 
 // create a new general ledger organization
 func (s *glService) CreateOrganization(ctx context.Context, req *pb.CreateOrganizationRequest) (*pb.CreateOrganizationResponse, error) {
-	s.logger.Printf("CreateOrganization called, name: %s\n", req.GetOrganizationName())
 	resp := &pb.CreateOrganizationResponse{}
 	if !nameValidator.MatchString(req.GetOrganizationName()) {
 		resp.ErrorCode = 510
@@ -83,7 +84,7 @@ func (s *glService) CreateOrganization(ctx context.Context, req *pb.CreateOrgani
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -117,7 +118,7 @@ func (s *glService) CreateOrganization(ctx context.Context, req *pb.CreateOrgani
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -126,7 +127,6 @@ func (s *glService) CreateOrganization(ctx context.Context, req *pb.CreateOrgani
 
 // update an existing general ledger organization
 func (s *glService) UpdateOrganization(ctx context.Context, req *pb.UpdateOrganizationRequest) (*pb.UpdateOrganizationResponse, error) {
-	s.logger.Printf("UpdateOrganization called, name: %s, guid: %v\n", req.GetOrganizationName(), req.GetOrganizationId())
 	resp := &pb.UpdateOrganizationResponse{}
 	if !nameValidator.MatchString(req.GetOrganizationName()) {
 		resp.ErrorCode = 510
@@ -138,7 +138,7 @@ func (s *glService) UpdateOrganization(ctx context.Context, req *pb.UpdateOrgani
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -169,7 +169,7 @@ func (s *glService) UpdateOrganization(ctx context.Context, req *pb.UpdateOrgani
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -178,14 +178,13 @@ func (s *glService) UpdateOrganization(ctx context.Context, req *pb.UpdateOrgani
 
 // delete an existing general ledger organization
 func (s *glService) DeleteOrganization(ctx context.Context, req *pb.DeleteOrganizationRequest) (*pb.DeleteOrganizationResponse, error) {
-	s.logger.Printf("DeleteOrganization called, guid: %v\n", req.GetOrganizationId())
 	resp := &pb.DeleteOrganizationResponse{}
 
 	sqlstring := `UPDATE tb_GLOrganization SET dtmDeleted = NOW(), bitIsDeleted = 1, intVersion = ? WHERE uidOrganizationId = ? AND inbMserviceId = ? AND intVersion = ? AND bitIsDeleted = 0`
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -208,7 +207,7 @@ func (s *glService) DeleteOrganization(ctx context.Context, req *pb.DeleteOrgani
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 	return resp, nil
@@ -216,7 +215,6 @@ func (s *glService) DeleteOrganization(ctx context.Context, req *pb.DeleteOrgani
 
 // get general ledger organization by id
 func (s *glService) GetOrganizationById(ctx context.Context, req *pb.GetOrganizationByIdRequest) (*pb.GetOrganizationByIdResponse, error) {
-	s.logger.Printf("GetOrganizationById called, guid: %v\n", req.GetOrganizationId())
 	resp := &pb.GetOrganizationByIdResponse{}
 
 	sqlstring := `SELECT uidOrganizationId, dtmCreated, dtmModified, intVersion, inbMserviceId, chvOrganizationName, dtmFromDate, dtmToDate FROM tb_GLOrganization WHERE 
@@ -224,7 +222,7 @@ func (s *glService) GetOrganizationById(ctx context.Context, req *pb.GetOrganiza
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -249,7 +247,7 @@ func (s *glService) GetOrganizationById(ctx context.Context, req *pb.GetOrganiza
 		org.FromDate = dml.DateTimeFromTime(start_date)
 		if end_date.Valid {
 			org.ToDate = dml.DateTimeFromTime(end_date.Time)
-			s.logger.Printf("end_date: %s, millis: %d\n", end_date, org.ToDate.Milliseconds)
+			level.Debug(s.logger).Log("end_date", end_date, "millis", org.ToDate.Milliseconds)
 		}
 
 		resp.GlOrganization = &org
@@ -259,7 +257,7 @@ func (s *glService) GetOrganizationById(ctx context.Context, req *pb.GetOrganiza
 		resp.ErrorMessage = "not found"
 
 	} else {
-		s.logger.Printf("queryRow failed: %v\n", err)
+		level.Error(s.logger).Log("what", "QueryRow", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 
@@ -270,7 +268,6 @@ func (s *glService) GetOrganizationById(ctx context.Context, req *pb.GetOrganiza
 
 // get general ledger organizations by mservice
 func (s *glService) GetOrganizationsByMservice(ctx context.Context, req *pb.GetOrganizationsByMserviceRequest) (*pb.GetOrganizationsByMserviceResponse, error) {
-	s.logger.Printf("GetOrganizationsByMservice called, id: %d\n", req.GetMserviceId())
 	resp := &pb.GetOrganizationsByMserviceResponse{}
 
 	sqlstring := `SELECT uidOrganizationId, dtmCreated, dtmModified, intVersion, inbMserviceId, chvOrganizationName, dtmFromDate, dtmToDate FROM tb_GLOrganization WHERE 
@@ -278,7 +275,7 @@ func (s *glService) GetOrganizationsByMservice(ctx context.Context, req *pb.GetO
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -288,7 +285,7 @@ func (s *glService) GetOrganizationsByMservice(ctx context.Context, req *pb.GetO
 
 	rows, err := stmt.Query(req.GetMserviceId())
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -307,7 +304,7 @@ func (s *glService) GetOrganizationsByMservice(ctx context.Context, req *pb.GetO
 		err := rows.Scan(&gid, &created, &modified, &org.Version, &org.MserviceId, &org.OrganizationName, &start_date, &end_date)
 
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil
@@ -329,7 +326,6 @@ func (s *glService) GetOrganizationsByMservice(ctx context.Context, req *pb.GetO
 
 // create general ledger account type
 func (s *glService) CreateAccountType(ctx context.Context, req *pb.CreateAccountTypeRequest) (*pb.CreateAccountTypeResponse, error) {
-	s.logger.Printf("CreateAccountType called, id: %d\n", req.GetAccountTypeId())
 	resp := &pb.CreateAccountTypeResponse{}
 
 	sqlstring := `INSERT INTO tb_GLAccountType (inbMserviceId, intAccountTypeId, dtmCreated, 
@@ -338,7 +334,7 @@ func (s *glService) CreateAccountType(ctx context.Context, req *pb.CreateAccount
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -359,7 +355,7 @@ func (s *glService) CreateAccountType(ctx context.Context, req *pb.CreateAccount
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -368,7 +364,6 @@ func (s *glService) CreateAccountType(ctx context.Context, req *pb.CreateAccount
 
 // update general ledger account type
 func (s *glService) UpdateAccountType(ctx context.Context, req *pb.UpdateAccountTypeRequest) (*pb.UpdateAccountTypeResponse, error) {
-	s.logger.Printf("UpdateAccountType called, id: %d\n", req.GetAccountTypeId())
 	resp := &pb.UpdateAccountTypeResponse{}
 
 	sqlstring := `UPDATE tb_GLAccountType SET dtmModified = NOW(), intVersion = ?, chvAccountType = ? 
@@ -376,7 +371,7 @@ func (s *glService) UpdateAccountType(ctx context.Context, req *pb.UpdateAccount
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -396,7 +391,7 @@ func (s *glService) UpdateAccountType(ctx context.Context, req *pb.UpdateAccount
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -405,7 +400,6 @@ func (s *glService) UpdateAccountType(ctx context.Context, req *pb.UpdateAccount
 
 // delete general ledger account type
 func (s *glService) DeleteAccountType(ctx context.Context, req *pb.DeleteAccountTypeRequest) (*pb.DeleteAccountTypeResponse, error) {
-	s.logger.Printf("DeleteAccountType called, id: %d\n", req.GetAccountTypeId())
 	resp := &pb.DeleteAccountTypeResponse{}
 
 	sqlstring := `UPDATE tb_GLAccountType SET dtmDeleted = NOW(), bitIsDeleted = 1,  intVersion = ? 
@@ -413,7 +407,7 @@ func (s *glService) DeleteAccountType(ctx context.Context, req *pb.DeleteAccount
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -434,7 +428,7 @@ func (s *glService) DeleteAccountType(ctx context.Context, req *pb.DeleteAccount
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -443,7 +437,6 @@ func (s *glService) DeleteAccountType(ctx context.Context, req *pb.DeleteAccount
 
 // get general ledger account type by id
 func (s *glService) GetAccountTypeById(ctx context.Context, req *pb.GetAccountTypeByIdRequest) (*pb.GetAccountTypeByIdResponse, error) {
-	s.logger.Printf("GetAccountTypeById called, id: %d\n", req.GetAccountTypeId())
 	resp := &pb.GetAccountTypeByIdResponse{}
 
 	sqlstring := `SELECT inbMserviceId, intAccountTypeId, dtmCreated, dtmModified, intVersion, chvAccountType
@@ -451,7 +444,7 @@ func (s *glService) GetAccountTypeById(ctx context.Context, req *pb.GetAccountTy
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -474,7 +467,7 @@ func (s *glService) GetAccountTypeById(ctx context.Context, req *pb.GetAccountTy
 		resp.ErrorMessage = "not found"
 
 	} else {
-		s.logger.Printf("queryRow failed: %v\n", err)
+		level.Error(s.logger).Log("what", "QueryRow", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 
@@ -485,7 +478,6 @@ func (s *glService) GetAccountTypeById(ctx context.Context, req *pb.GetAccountTy
 
 // get general ledger account types by mservice
 func (s *glService) GetAccountTypesByMservice(ctx context.Context, req *pb.GetAccountTypesByMserviceRequest) (*pb.GetAccountTypesByMserviceResponse, error) {
-	s.logger.Printf("GetAccountTypesByMservice called, mservice: %d\n", req.GetMserviceId())
 	resp := &pb.GetAccountTypesByMserviceResponse{}
 
 	sqlstring := `SELECT inbMserviceId, intAccountTypeId, dtmCreated, dtmModified, intVersion, chvAccountType
@@ -493,7 +485,7 @@ func (s *glService) GetAccountTypesByMservice(ctx context.Context, req *pb.GetAc
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -503,7 +495,7 @@ func (s *glService) GetAccountTypesByMservice(ctx context.Context, req *pb.GetAc
 
 	rows, err := stmt.Query(req.GetMserviceId())
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -517,7 +509,7 @@ func (s *glService) GetAccountTypesByMservice(ctx context.Context, req *pb.GetAc
 		err := rows.Scan(&acctType.MserviceId, &acctType.AccountTypeId, &created,
 			&modified, &acctType.Version, &acctType.AccountType)
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil

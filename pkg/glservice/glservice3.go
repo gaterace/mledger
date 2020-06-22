@@ -17,6 +17,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/go-kit/kit/log/level"
 	"time"
 
 	"github.com/gaterace/dml-go/pkg/dml"
@@ -36,7 +37,6 @@ type genericResponse struct {
 
 // create general ledger transaction
 func (s *glService) CreateTransaction(ctx context.Context, req *pb.CreateTransactionRequest) (*pb.CreateTransactionResponse, error) {
-	s.logger.Printf("CreateTransaction called, mservice: %d\n", req.GetMserviceId())
 	resp := &pb.CreateTransactionResponse{}
 
 	sqlstring := `INSERT INTO tb_GLTransaction (dtmCreated, dtmModified, dtmDeleted, bitIsDeleted, intVersion, inbMserviceId,
@@ -45,7 +45,7 @@ func (s *glService) CreateTransaction(ctx context.Context, req *pb.CreateTransac
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -85,9 +85,9 @@ func (s *glService) CreateTransaction(ctx context.Context, req *pb.CreateTransac
 		if rowsAffected == 1 {
 			transactionId, err := res.LastInsertId()
 			if err != nil {
-				s.logger.Printf("LastInsertId err: %v\n", err)
+				level.Error(s.logger).Log("what", "LastInsertId", "error", err)
 			} else {
-				s.logger.Printf("transactionId: %d", transactionId)
+				level.Debug(s.logger).Log("transactionId", transactionId)
 				resp.GlTransactionId = transactionId
 				resp.Version = 1
 			}
@@ -99,7 +99,7 @@ func (s *glService) CreateTransaction(ctx context.Context, req *pb.CreateTransac
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -108,7 +108,6 @@ func (s *glService) CreateTransaction(ctx context.Context, req *pb.CreateTransac
 
 // update general ledger transaction
 func (s *glService) UpdateTransaction(ctx context.Context, req *pb.UpdateTransactionRequest) (*pb.UpdateTransactionResponse, error) {
-	s.logger.Printf("UpdateTransaction called, id: %d\n", req.GetGlTransactionId())
 	resp := &pb.UpdateTransactionResponse{}
 
 	sqlstring := `UPDATE tb_GLTransaction SET dtmModified = NOW(), intVersion = ?, dtmTransactionDate = ?, chvTransactionDescription= ?,
@@ -117,7 +116,7 @@ func (s *glService) UpdateTransaction(ctx context.Context, req *pb.UpdateTransac
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -164,7 +163,7 @@ func (s *glService) UpdateTransaction(ctx context.Context, req *pb.UpdateTransac
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -173,7 +172,6 @@ func (s *glService) UpdateTransaction(ctx context.Context, req *pb.UpdateTransac
 
 // delete general ledger transaction
 func (s *glService) DeleteTransaction(ctx context.Context, req *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error) {
-	s.logger.Printf("DeleteTransaction called, id: %d\n", req.GetGlTransactionId())
 	resp := &pb.DeleteTransactionResponse{}
 
 	sqlstring := `UPDATE tb_GLTransaction SET dtmDeleted = NOW(), bitIsDeleted = 1, intVersion = ? 
@@ -181,7 +179,7 @@ func (s *glService) DeleteTransaction(ctx context.Context, req *pb.DeleteTransac
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -202,7 +200,7 @@ func (s *glService) DeleteTransaction(ctx context.Context, req *pb.DeleteTransac
 	} else {
 		resp.ErrorCode = 501
 		resp.ErrorMessage = err.Error()
-		s.logger.Printf("err: %v\n", err)
+		level.Error(s.logger).Log("what", "Exec", "error", err)
 		err = nil
 	}
 
@@ -211,7 +209,6 @@ func (s *glService) DeleteTransaction(ctx context.Context, req *pb.DeleteTransac
 
 // get general ledger transaction by id
 func (s *glService) GetTransactionById(ctx context.Context, req *pb.GetTransactionByIdRequest) (*pb.GetTransactionByIdResponse, error) {
-	s.logger.Printf("GetTransactionById called, id: %d\n", req.GetGlTransactionId())
 	resp := &pb.GetTransactionByIdResponse{}
 
 	gResp, tran := s.GetTransactionHelper(req.GetGlTransactionId(), req.GetMserviceId())
@@ -227,7 +224,6 @@ func (s *glService) GetTransactionById(ctx context.Context, req *pb.GetTransacti
 
 // get general ledger transaction wrapper by id
 func (s *glService) GetTransactionWrapperById(ctx context.Context, req *pb.GetTransactionWrapperByIdRequest) (*pb.GetTransactionWrapperByIdResponse, error) {
-	s.logger.Printf("GetTransactionWrapperById called, id: %d\n", req.GetGlTransactionId())
 	resp := &pb.GetTransactionWrapperByIdResponse{}
 
 	gResp, tran := s.GetTransactionHelper(req.GetGlTransactionId(), req.GetMserviceId())
@@ -245,7 +241,7 @@ func (s *glService) GetTransactionWrapperById(ctx context.Context, req *pb.GetTr
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -256,7 +252,7 @@ func (s *glService) GetTransactionWrapperById(ctx context.Context, req *pb.GetTr
 	rows, err := stmt.Query(req.GetGlTransactionId())
 
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -272,7 +268,7 @@ func (s *glService) GetTransactionWrapperById(ctx context.Context, req *pb.GetTr
 		err := rows.Scan(&detail.GlTransactionId, &detail.SequenceNumber, &gid, &amount, &detail.IsDebit)
 
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil
@@ -295,7 +291,6 @@ func (s *glService) GetTransactionWrapperById(ctx context.Context, req *pb.GetTr
 
 // get general ledger transaction wrappers by date
 func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.GetTransactionWrappersByDateRequest) (*pb.GetTransactionWrappersByDateResponse, error) {
-	s.logger.Printf("GetTransactionWrappersByDate called\n")
 	resp := &pb.GetTransactionWrappersByDateResponse{}
 
 	sqlstring := `SELECT t.inbGlTransactionId, t.dtmCreated, t.dtmModified, t.intVersion, t.inbMserviceId, t.uidOrganizationId, 
@@ -309,7 +304,7 @@ func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.Ge
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -323,7 +318,7 @@ func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.Ge
 	rows, err := stmt.Query(req.GetOrganizationId().Guid, req.GetMserviceId(), start_date, end_date)
 
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -349,7 +344,7 @@ func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.Ge
 			&via_date, &tran.TransactionType)
 
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil
@@ -392,7 +387,7 @@ func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.Ge
 
 	stmt2, err := s.db.Prepare(sqlstring2)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -403,7 +398,7 @@ func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.Ge
 	rows2, err := stmt2.Query(req.GetOrganizationId().Guid, req.GetMserviceId(), start_date, end_date)
 
 	if err != nil {
-		s.logger.Printf("query failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Query", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 		return resp, nil
@@ -419,7 +414,7 @@ func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.Ge
 		err := rows2.Scan(&detail.GlTransactionId, &detail.SequenceNumber, &gid, &amount, &detail.IsDebit)
 
 		if err != nil {
-			s.logger.Printf("query rows scan  failed: %v\n", err)
+			level.Error(s.logger).Log("what", "Scan", "error", err)
 			resp.ErrorCode = 500
 			resp.ErrorMessage = err.Error()
 			return resp, nil
@@ -443,7 +438,6 @@ func (s *glService) GetTransactionWrappersByDate(ctx context.Context, req *pb.Ge
 
 // add transaction details
 func (s *glService) AddTransactionDetails(ctx context.Context, req *pb.AddTransactionDetailsRequest) (*pb.AddTransactionDetailsResponse, error) {
-	s.logger.Printf("AddTransactionDetails called, id: %d\n", req.GetGlTransactionId())
 	resp := &pb.AddTransactionDetailsResponse{}
 
 	// make sure we are referring to a valid transaction
@@ -451,7 +445,7 @@ func (s *glService) AddTransactionDetails(ctx context.Context, req *pb.AddTransa
 
 	stmt1, err := s.db.Prepare(sqlstring1)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -474,7 +468,7 @@ func (s *glService) AddTransactionDetails(ctx context.Context, req *pb.AddTransa
 	sqlstring2 := `SELECT uidGlAccountId FROM tb_GLAccount WHERE uidGlAccountId = ? AND inbMserviceId = ? AND bitIsDeleted = 0`
 	stmt2, err := s.db.Prepare(sqlstring2)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -510,7 +504,7 @@ func (s *glService) AddTransactionDetails(ctx context.Context, req *pb.AddTransa
 	// make sure debits and credits match
 	if !creditAmt.Equals(debitAmt) {
 		resp.ErrorCode = 501
-		resp.ErrorMessage = "credits anmd debits do not balance"
+		resp.ErrorMessage = "credits and debits do not balance"
 		return resp, nil
 	}
 
@@ -526,7 +520,6 @@ func (s *glService) AddTransactionDetails(ctx context.Context, req *pb.AddTransa
 
 // get current server version and uptime - health check
 func (s *glService) GetServerVersion(ctx context.Context, req *pb.GetServerVersionRequest) (*pb.GetServerVersionResponse, error) {
-	s.logger.Printf("GetServerVersion called\n")
 	resp := &pb.GetServerVersionResponse{}
 
 	currentSecs := time.Now().Unix()
@@ -580,7 +573,7 @@ func (s *glService) GetTransactionHelper(transactionId int64, mserviceId int64) 
 
 	stmt, err := s.db.Prepare(sqlstring)
 	if err != nil {
-		s.logger.Printf("db.Prepare sqlstring failed: %v\n", err)
+		level.Error(s.logger).Log("what", "Prepare", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = "db.Prepare failed"
 		return resp, nil
@@ -628,7 +621,7 @@ func (s *glService) GetTransactionHelper(transactionId int64, mserviceId int64) 
 		resp.ErrorMessage = "not found"
 
 	} else {
-		s.logger.Printf("queryRow failed: %v\n", err)
+		level.Error(s.logger).Log("what", "QueryRow", "error", err)
 		resp.ErrorCode = 500
 		resp.ErrorMessage = err.Error()
 
