@@ -17,8 +17,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/go-kit/kit/log/level"
 	"time"
+
+	"github.com/go-kit/kit/log/level"
 
 	"github.com/gaterace/dml-go/pkg/dml"
 

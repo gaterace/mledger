@@ -16,12 +16,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"io"
 	"net"
 	"os"
 	"strconv"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 
 	"github.com/gaterace/mledger/pkg/glauth"
 	"github.com/gaterace/mledger/pkg/glservice"
@@ -58,7 +59,6 @@ func main() {
 	db_transport, _ := config.Get("db_transport")
 	jwt_pub_file, _ := config.Get("jwt_pub_file")
 
-
 	var logWriter io.Writer
 
 	if log_file == "" {
@@ -79,7 +79,6 @@ func main() {
 	level.Info(logger).Log("db_user", db_user)
 	level.Info(logger).Log("db_transport", db_transport)
 	level.Info(logger).Log("jwt_pub_file", jwt_pub_file)
-
 
 	if port == 0 {
 		port = 50056

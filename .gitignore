@@ -26,5 +26,6 @@ mledger.sublime-*
 cmd/glclient/glclient
 cmd/glclient/conf.yaml
 cmd/glserver/glserver
+cmd/glserver/glserver_arm
 cmd/glserver/conf.yaml
 cmd/glserver/log.txt

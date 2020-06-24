@@ -16,8 +16,9 @@ package glservice
 import (
 	"context"
 	"database/sql"
-	"github.com/go-kit/kit/log/level"
 	"time"
+
+	"github.com/go-kit/kit/log/level"
 
 	"github.com/gaterace/dml-go/pkg/dml"
 

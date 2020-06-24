@@ -20,9 +20,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/go-sql-driver/mysql"
@@ -39,6 +40,7 @@ const (
 	tokenExpiredMatch   = "Token is expired"
 	tokenExpiredMessage = "token is expired"
 )
+
 var NotImplemented = errors.New("not implemented")
 
 type GlAuth struct {
@@ -167,7 +169,7 @@ func (s *GlAuth) IsTokenExpired(ctx context.Context) bool {
 
 	_, err := s.GetJwtFromContext(ctx)
 	if err != nil {
-		if  err.Error() == tokenExpiredMatch {
+		if err.Error() == tokenExpiredMatch {
 			expired = true
 		}
 	}
@@ -252,7 +254,7 @@ func (s *GlAuth) UpdateOrganization(ctx context.Context, req *pb.UpdateOrganizat
 	ok, aid := s.HasAdminAccess(ctx)
 	if ok {
 		req.MserviceId = aid
-		resp, err =  s.glService.UpdateOrganization(ctx, req)
+		resp, err = s.glService.UpdateOrganization(ctx, req)
 	} else if s.IsTokenExpired(ctx) {
 		resp.ErrorCode = 498
 		resp.ErrorMessage = tokenExpiredMessage
@@ -1017,7 +1019,6 @@ func (s *GlAuth) GetTransactionWrappersByDate(ctx context.Context, req *pb.GetTr
 		"organizationid", req.GetOrganizationId(),
 		"errcode", resp.GetErrorCode(), "duration", duration)
 
-
 	return resp, err
 }
 
@@ -1044,7 +1045,6 @@ func (s *GlAuth) AddTransactionDetails(ctx context.Context, req *pb.AddTransacti
 		"transactionid", req.GetGlTransactionId(),
 		"errcode", resp.GetErrorCode(), "duration", duration)
 
-
 	return resp, err
 }
 
@@ -1052,4 +1052,3 @@ func (s *GlAuth) AddTransactionDetails(ctx context.Context, req *pb.AddTransacti
 func (s *GlAuth) GetServerVersion(ctx context.Context, req *pb.GetServerVersionRequest) (*pb.GetServerVersionResponse, error) {
 	return s.glService.GetServerVersion(ctx, req)
 }
-

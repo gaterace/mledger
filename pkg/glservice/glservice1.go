@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
@@ -38,8 +39,8 @@ var nameValidator = regexp.MustCompile("^[a-z0-9_\\-]{1,32}$")
 var emptyDateString = "0000-00-00 00:00:00"
 
 type glService struct {
-	logger log.Logger
-	db     *sql.DB
+	logger    log.Logger
+	db        *sql.DB
 	startSecs int64
 }
 

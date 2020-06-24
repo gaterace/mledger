@@ -1991,10 +1991,12 @@ type GetTransactionTypeByIdResponse struct {
 	GlTransactionType *GLTransactionType `protobuf:"bytes,3,opt,name=gl_transaction_type,json=glTransactionType" json:"gl_transaction_type,omitempty"`
 }
 
-func (m *GetTransactionTypeByIdResponse) Reset()                    { *m = GetTransactionTypeByIdResponse{} }
-func (m *GetTransactionTypeByIdResponse) String() string            { return proto.CompactTextString(m) }
-func (*GetTransactionTypeByIdResponse) ProtoMessage()               {}
-func (*GetTransactionTypeByIdResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{35} }
+func (m *GetTransactionTypeByIdResponse) Reset()         { *m = GetTransactionTypeByIdResponse{} }
+func (m *GetTransactionTypeByIdResponse) String() string { return proto.CompactTextString(m) }
+func (*GetTransactionTypeByIdResponse) ProtoMessage()    {}
+func (*GetTransactionTypeByIdResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{35}
+}
 
 func (m *GetTransactionTypeByIdResponse) GetErrorCode() int32 {
 	if m != nil {
