@@ -1,4 +1,4 @@
-// Copyright 2020 Demian Harvill
+// Copyright 2020-2021 Demian Harvill
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,8 +25,8 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
-	"github.com/dgrijalva/jwt-go"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-jwt/jwt"
 
 	pb "github.com/gaterace/mledger/pkg/mserviceledger"
 	"google.golang.org/grpc"
