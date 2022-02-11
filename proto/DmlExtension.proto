@@ -15,6 +15,7 @@
 syntax = "proto3";
 
 package dml;
+option go_package = "github.com/gaterace/dml-go/pkg/dml";
 
 
 message DateTime {

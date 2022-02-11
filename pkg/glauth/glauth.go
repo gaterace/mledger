@@ -1,4 +1,4 @@
-// Copyright 2020-2021 Demian Harvill
+// Copyright 2020-2022 Demian Harvill
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -44,6 +44,7 @@ const (
 var NotImplemented = errors.New("not implemented")
 
 type GlAuth struct {
+	pb.UnimplementedMServiceLedgerServer
 	logger          log.Logger
 	db              *sql.DB
 	rsaPSSPublicKey *rsa.PublicKey
