@@ -140,7 +140,28 @@ To build the server:
 **go build**
 
 The glserver executable can then be run.  It expects a YAML configuration file in the same directory named **conf.yaml** .  The location
-of the configuration file can be changed with an environment variable,**GL_CONF** .
+of the configuration file can be changed with an environment variable,**GL_CONF** . Configuration can slao be specified
+using command line flags when starting the server, or through environment variables (with GL_ prefix).
+
+```
+glserver -h
+
+Usage:
+  invserver [flags]
+
+Flags:
+      --cert_file string      Path to certificate file.
+      --conf string           Path to inventory config file. (default "conf.yaml")
+      --db_pwd string         Database user password.
+      --db_transport string   Database transport string.
+      --db_user string        Database user name.
+  -h, --help                  help for invserver
+      --jwt_pub_file string   Path to JWT public certificate.
+      --key_file string       Path to certificate key file.
+      --log_file string       Path to log file.
+      --port int              Port for RPC connections (default 50056)
+      --tls                   Use tls for connection.
+```
 
 A commented sample configuration file is at **cmd/glserver/conf.sample** . The locations of the various certificates and 
 keys need to be provided, as well as the database user and password and the MySql connection string.
