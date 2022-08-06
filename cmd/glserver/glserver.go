@@ -42,7 +42,7 @@ func main() {
 	cli := &cli{}
 
 	cmd := &cobra.Command{
-		Use:     "invserver",
+		Use:     "glserver",
 		PreRunE: cli.setupConfig,
 		RunE:    cli.run,
 	}
