@@ -1,6 +1,6 @@
 # MLedger
 
-Copyright 2020-2022 Demian Harvill
+Copyright 2020-2023 Demian Harvill
 
 ## Overview
 
